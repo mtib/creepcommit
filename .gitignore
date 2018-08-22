@@ -2,3 +2,4 @@ getter
 *.o
 *.txt
 *.json
+*.hdf5

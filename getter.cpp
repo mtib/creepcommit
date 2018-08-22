@@ -26,8 +26,42 @@ void readfile(char *file, char *mem) {
 }
 
 void recordMsg(const char *msg) {
+    //fputs("[BEGIN]", out);
     fputs(msg, out);
     fputs("\n", out);
+    //fputs("[END]", out);
+}
+
+void simplify(char* dst, const char* src) {
+    bool space_mode = false;
+    bool isfirst = true;
+    size_t index = 0;
+    size_t walk = 0;
+    while (src[walk] != '\0') {
+        switch (src[walk]) {
+            case '\r':
+            case '\n':
+                if(isfirst) {
+                    isfirst = false;
+                    dst[index] = '.';
+                    index++;
+                }
+            case '\t':
+            case ' ':
+                if (!space_mode) {
+                    dst[index] = ' ';
+                    index++;
+                    space_mode = true;
+                }
+                break;
+            default:
+                dst[index] = src[walk];
+                index++;
+                space_mode = false;
+                break;
+        }
+        walk++;
+    }
 }
 
 void handleRepo(const char *repo_full) {
@@ -47,7 +81,10 @@ void handleRepo(const char *repo_full) {
     int length = jw.size();
     for (int i = 0; i < length; i++) {
         string msg = jw.at(i)["commit"]["message"].get<string>();
-        recordMsg(msg.c_str());
+        char *simpl = (char*) calloc(msg.size() + 10, sizeof(char));
+        simplify(simpl, msg.c_str());
+        recordMsg(simpl);
+        free(simpl);
     }
 
 }
@@ -64,9 +101,9 @@ void handleUser(const char *user) {
 
     char *content = (char*) calloc(5 * 1024 * 1024, sizeof(char));
     readfile(file, content);
-    free(content);
 
     auto jw = nlohmann::json::parse(content);
+    free(content);
 
     int length = jw.size();
     for (int i = 0; i < length; i++) {
