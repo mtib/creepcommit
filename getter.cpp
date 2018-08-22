@@ -10,6 +10,14 @@
 using namespace std;
 
 FILE *out;
+CURL *curl;
+string downloadBuffer;
+
+static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t s = size * nmemb;
+    downloadBuffer.append((const char *) contents, s);
+    return s;
+}
 
 // TODO replace download/read with in-memory solution
 void download(char *url, char *file) {
@@ -29,6 +37,13 @@ void readfile(char *file, char *mem) {
         printf("%s\n", "... no response");
     }
     fclose(f);
+}
+
+void mem_download(char *url, char *dst) {
+    downloadBuffer.clear();
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_perform(curl);
+    strncpy(dst, downloadBuffer.c_str(), CREEP_RESPONSE_LEN);
 }
 
 void recordMsg(const char *msg) {
@@ -72,12 +87,10 @@ void handleRepo(const char *repo_full) {
     printf("repo: %s\n", repo_full);
     
     char link[CREEP_DESC_LEN];
-    char file[CREEP_DESC_LEN];
     snprintf(link, CREEP_DESC_LEN, "https://api.github.com/repos/%s/commits?access_token=%s", repo_full, getenv("GITHUB_AUTH"));
-    download(link, file);
 
     char *content = (char*) calloc(CREEP_RESPONSE_LEN, sizeof(char));
-    readfile(file, content);
+    mem_download(link, content);
     auto jw = nlohmann::json::parse(content);
     free(content);
 
@@ -96,14 +109,11 @@ void handleUser(const char *user) {
     printf("user: %s\n", user);
 
     char repourl[CREEP_DESC_LEN];
-    char file[CREEP_DESC_LEN];
-
     snprintf(repourl, CREEP_DESC_LEN, "https://api.github.com/users/%s/repos?access_token=%s", user, getenv("GITHUB_AUTH"));
-    download(repourl, file);
     //printf("%s -> %s\n", repourl, file);
 
     char *content = (char*) calloc(CREEP_RESPONSE_LEN, sizeof(char));
-    readfile(file, content);
+    mem_download(repourl, content);
 
     auto jw = nlohmann::json::parse(content);
     free(content);
@@ -126,6 +136,8 @@ int main(int argc, char *argv[]) {
     }
     printf("using env GITHUB_AUTH as authentification\n");
     out = fopen(argv[1], "a");
+    curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     for (int i = 2; i < argc; i++) {
         handleUser(argv[i]);
 #ifdef LIMIT

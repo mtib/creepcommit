@@ -1,6 +1,6 @@
 CC = clang
 CLFAGS = -Wall
-CLIBS = -lstdc++
+CLIBS = -lstdc++ -lcurl
 COBJ = 
 
 getter: getter.cpp getter.hpp

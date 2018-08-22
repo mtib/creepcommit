@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <ctime>
 #include <cstring>
+#include <curl/curl.h>
+#include <string>
 
 #define CREEP_DESC_LEN 512
 #define CREEP_RESPONSE_LEN (5*1024*1024)
