@@ -3,6 +3,12 @@ CLFAGS = -Wall
 CLIBS = -lstdc++
 COBJ = 
 
+getter: getter.cpp getter.hpp
+	$(CC) $(CFLAGS) $(CLIBS) -o $@ $< $(COBJ)
+
+%.o: %.cpp %.hpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 .PHONY: run clean
 
 run: getter
@@ -10,7 +16,5 @@ run: getter
 
 clean:
 	rm -rf *.o
-
-getter: getter.cpp getter.hpp
-	$(CC) $(CFLAGS) $(CLIBS) -o $@ $< $(COBJ)
+	rm -rf getter
 
