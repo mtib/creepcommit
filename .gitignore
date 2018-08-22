@@ -1,2 +1,4 @@
 getter
 *.o
+*.txt
+*.json
